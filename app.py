@@ -1,8 +1,9 @@
 import streamlit as st
 import json
 import os
+from datetime import date
 
-st.set_page_config(page_title="IT Career Planner – MAX ELITE", layout="wide")
+st.set_page_config(page_title="IT Career Planner – Weekly Focus", layout="wide")
 
 DATA_FILE = "progress.json"
 PASSWORD = "changeme"
@@ -37,35 +38,71 @@ if "progress" not in st.session_state:
     st.session_state.progress = load_progress()
 
 # ---------------- RESET ----------------
-if st.sidebar.button("🔄 Reset Progress"):
+if st.button("🔄 Reset Progress"):
     st.session_state.progress = {}
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
 
-# ---------------- CARD RENDER ----------------
-def render_card(day_label, tasks):
-    with st.container():
-        st.markdown(f"### 📅 {day_label}")
-        st.markdown("---")
+# ---------------- DATA ----------------
+WEEK_PLAN = {
+    "Monday": [
+        ("learn", "AZ-900 Cloud Concepts", "https://learn.microsoft.com/en-us/training/modules/principles-cloud-computing/"),
+        ("practice", "Azure Portal exploration", "https://portal.azure.com"),
+        ("notes", "Write summary", "")
+    ],
+    "Tuesday": [
+        ("learn", "AZ-900 Cloud Benefits", "https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/"),
+        ("video", "Azure fundamentals video", "https://www.youtube.com/results?search_query=az-900+john+savill"),
+        ("practice", "Quiz + notes", "")
+    ],
+    "Wednesday": [
+        ("learn", "Python basics", "https://www.w3schools.com/python/"),
+        ("code", "Write automation script", ""),
+        ("practice", "Loops + functions", "")
+    ],
+    "Thursday": [
+        ("learn", "Git basics", "https://www.atlassian.com/git/tutorials"),
+        ("practice", "Push to GitHub", "https://github.com"),
+        ("project", "Portfolio repo init", "")
+    ],
+    "Friday": [
+        ("learn", "Docker intro", "https://docs.docker.com/get-started/"),
+        ("practice", "Build container", ""),
+        ("lab", "Run environment", "")
+    ],
+    "Saturday": [
+        ("project", "Mini project build", ""),
+        ("review", "Fix gaps", ""),
+        ("notes", "Document learnings", "")
+    ],
+    "Sunday": [
+        ("review", "Weekly review", ""),
+        ("plan", "Plan next week", ""),
+        ("rest", "Light study / rest", "")
+    ]
+}
 
-        for key, text, link in tasks:
-            k = f"{day_label}_{key}"
+# ---------------- CHECKLIST ----------------
+def render_day(day, tasks):
+    st.markdown(f"## 📅 {day}")
 
-            if k not in st.session_state.progress:
-                st.session_state.progress[k] = False
+    for key, text, link in tasks:
+        k = f"{day}_{key}"
 
-            col1, col2 = st.columns([0.8, 0.2])
+        if k not in st.session_state.progress:
+            st.session_state.progress[k] = False
 
-            with col1:
-                val = st.checkbox(text, value=st.session_state.progress[k], key=k)
-                st.session_state.progress[k] = val
+        col1, col2 = st.columns([0.85, 0.15])
 
-            with col2:
-                if link:
-                    st.markdown(f"[🔗]({link})")
+        with col1:
+            val = st.checkbox(text, value=st.session_state.progress[k], key=k)
+            st.session_state.progress[k] = val
 
-        st.markdown("\n")
-        save_progress()
+        with col2:
+            if link:
+                st.markdown(f"[🔗]({link})")
+
+    save_progress()
 
 # ---------------- NEXT TASK ----------------
 def next_task():
@@ -80,85 +117,37 @@ def progress():
     done = sum(1 for v in st.session_state.progress.values() if v)
     return done / total if total else 0
 
-# ---------------- DATA ----------------
-AZ900 = [
-    ("1", "Cloud Concepts (IaaS/PaaS/SaaS)", "https://learn.microsoft.com/en-us/training/modules/principles-cloud-computing/"),
-    ("2", "Cloud benefits", "https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/"),
-    ("3", "Azure architecture basics", "https://learn.microsoft.com/en-us/training/modules/azure-architecture-fundamentals/"),
-    ("4", "Pricing + SLA", "https://learn.microsoft.com/en-us/training/modules/azure-pricing-sla-lifecycle/"),
-    ("5", "Identity basics", "https://learn.microsoft.com/en-us/training/modules/describe-azure-active-directory/"),
-]
+# ---------------- UI (NO DROPDOWNS, NO NAVIGATION) ----------------
+st.title("🚀 Weekly IT Career Planner")
+st.caption("Focus mode: one system, one plan, no distractions.")
 
-PYTHON = [
-    ("1", "Automate the Boring Stuff", "https://automatetheboringstuff.com/"),
-    ("2", "Python practice", "https://www.w3schools.com/python/"),
-    ("3", "Build script", ""),
-    ("4", "API script", ""),
-    ("5", "Push to GitHub", "https://github.com"),
-]
+# TODAY (always visible)
+today_name = date.today().strftime("%A")
+st.markdown("---")
+st.subheader(f"📍 Today: {today_name}")
 
-DEVOPS = [
-    ("1", "Docker basics", "https://docs.docker.com/get-started/"),
-    ("2", "Git workflow", "https://www.atlassian.com/git/tutorials"),
-    ("3", "Build container", ""),
-    ("4", "Run container", ""),
-    ("5", "Deploy project", "https://github.com"),
-]
+if today_name in WEEK_PLAN:
+    render_day(today_name, WEEK_PLAN[today_name])
+else:
+    st.info("No plan for today")
 
-AZ104 = [
-    ("1", "Identity & RBAC", "https://learn.microsoft.com/en-us/training/paths/az-104-manage-identities-governance/"),
-    ("2", "VMs", "https://learn.microsoft.com/en-us/training/modules/azure-virtual-machines/"),
-    ("3", "Storage", "https://learn.microsoft.com/en-us/training/modules/azure-storage-fundamentals/"),
-    ("4", "Networking", "https://learn.microsoft.com/en-us/training/modules/introduction-to-azure-virtual-networking/"),
-    ("5", "Monitoring", "https://learn.microsoft.com/en-us/training/modules/monitor-azure-resources/"),
-]
+st.markdown("---")
 
-# ---------------- UI ----------------
-st.title("🚀 IT Career Planner – CARD VIEW")
+# FULL WEEK (always visible, no collapse)
+st.subheader("📆 This Week")
 
-view = st.sidebar.selectbox("View", ["Next Task", "All Days (Cards)", "Progress"])
+for day, tasks in WEEK_PLAN.items():
+    render_day(day, tasks)
+    st.markdown("---")
 
-# ---------------- NEXT TASK ----------------
-if view == "Next Task":
-    task = next_task()
-    st.success(task if task else "ALL DONE 🚀")
+# PROGRESS (always visible)
+st.subheader("📊 Progress")
+p = progress()
+st.progress(p)
+st.write(f"{round(p*100)}% complete")
 
-# ---------------- ALL DAYS (NO DROPDOWN ANYMORE) ----------------
-elif view == "All Days (Cards)":
+# RESET (bottom only)
+st.markdown("---")
+st.button("🔄 Reset Progress")
 
-    st.subheader("📅 60-Day Roadmap")
-
-    for day in range(1, 61):
-
-        if day <= 14:
-            tasks = AZ900 + [("lab", "Azure hands-on lab", "https://portal.azure.com")]
-            label = f"Day {day} – AZ-900"
-
-        elif day <= 28:
-            tasks = PYTHON.copy()
-            if day % 2 == 0:
-                tasks.append(("extra", "Mini automation project", ""))
-            label = f"Day {day} – Python"
-
-        elif day <= 42:
-            tasks = DEVOPS.copy()
-            if day % 3 == 0:
-                tasks.append(("lab", "Docker lab", ""))
-            label = f"Day {day} – DevOps"
-
-        else:
-            tasks = AZ104.copy()
-            if day % 2 == 0:
-                tasks.append(("project", "Azure full setup project", ""))
-            label = f"Day {day} – AZ-104"
-
-        with st.expander(label, expanded=False):
-            render_card(label, tasks)
-
-# ---------------- PROGRESS ----------------
-elif view == "Progress":
-    p = progress()
-    st.progress(p)
-    st.write(f"{round(p*100)}% complete")
-
-st.sidebar.info("Card view full roadmap enabled (no dropdown days) 🔥")
+st.sidebar.info("No dropdowns. Full focus weekly system 🧠")
