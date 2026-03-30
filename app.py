@@ -42,7 +42,7 @@ if st.sidebar.button("🔄 Reset Progress"):
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
 
-# ---------------- CHECKLIST (CARD STYLE) ----------------
+# ---------------- CARD RENDER ----------------
 def render_card(day_label, tasks):
     with st.container():
         st.markdown(f"### 📅 {day_label}")
@@ -116,37 +116,44 @@ AZ104 = [
 # ---------------- UI ----------------
 st.title("🚀 IT Career Planner – CARD VIEW")
 
-view = st.sidebar.selectbox("View", ["Next Task", "Daily Cards", "Progress"])
+view = st.sidebar.selectbox("View", ["Next Task", "All Days (Cards)", "Progress"])
 
 # ---------------- NEXT TASK ----------------
 if view == "Next Task":
     task = next_task()
     st.success(task if task else "ALL DONE 🚀")
 
-# ---------------- DAILY CARDS ----------------
-elif view == "Daily Cards":
-    day = st.selectbox("Select Day", list(range(1, 61)))
+# ---------------- ALL DAYS (NO DROPDOWN ANYMORE) ----------------
+elif view == "All Days (Cards)":
 
-    if day <= 14:
-        render_card(f"Day {day} – AZ-900", AZ900)
+    st.subheader("📅 60-Day Roadmap")
 
-    elif day <= 28:
-        tasks = PYTHON.copy()
-        if day % 2 == 0:
-            tasks.append(("extra", "Mini automation project", ""))
-        render_card(f"Day {day} – Python", tasks)
+    for day in range(1, 61):
 
-    elif day <= 42:
-        tasks = DEVOPS.copy()
-        if day % 3 == 0:
-            tasks.append(("lab", "Docker lab", ""))
-        render_card(f"Day {day} – DevOps", tasks)
+        if day <= 14:
+            tasks = AZ900 + [("lab", "Azure hands-on lab", "https://portal.azure.com")]
+            label = f"Day {day} – AZ-900"
 
-    else:
-        tasks = AZ104.copy()
-        if day % 2 == 0:
-            tasks.append(("project", "Azure full setup project", ""))
-        render_card(f"Day {day} – AZ-104", tasks)
+        elif day <= 28:
+            tasks = PYTHON.copy()
+            if day % 2 == 0:
+                tasks.append(("extra", "Mini automation project", ""))
+            label = f"Day {day} – Python"
+
+        elif day <= 42:
+            tasks = DEVOPS.copy()
+            if day % 3 == 0:
+                tasks.append(("lab", "Docker lab", ""))
+            label = f"Day {day} – DevOps"
+
+        else:
+            tasks = AZ104.copy()
+            if day % 2 == 0:
+                tasks.append(("project", "Azure full setup project", ""))
+            label = f"Day {day} – AZ-104"
+
+        with st.expander(label, expanded=False):
+            render_card(label, tasks)
 
 # ---------------- PROGRESS ----------------
 elif view == "Progress":
@@ -154,4 +161,4 @@ elif view == "Progress":
     st.progress(p)
     st.write(f"{round(p*100)}% complete")
 
-st.sidebar.info("Card UI enabled – cleaner daily view 🧠")
+st.sidebar.info("Card view full roadmap enabled (no dropdown days) 🔥")
