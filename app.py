@@ -3,7 +3,7 @@ import json
 import os
 from datetime import date
 
-st.set_page_config(page_title="IT Career Planner – Weekly Focus", layout="wide")
+st.set_page_config(page_title="IT Career Planner – Architecture Fixed", layout="wide")
 
 DATA_FILE = "progress.json"
 PASSWORD = "changeme"
@@ -43,60 +43,62 @@ if st.button("🔄 Reset Progress"):
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
 
-# ---------------- DATA ----------------
+# ---------------- WEEK DATA (ARCHITECTURE FIXED) ----------------
 WEEK_PLAN = {
     "Monday": [
-        ("learn", "AZ-900 Cloud Concepts", "https://learn.microsoft.com/en-us/training/modules/principles-cloud-computing/"),
-        ("practice", "Azure Portal exploration", "https://portal.azure.com"),
-        ("notes", "Write summary", "")
+        {"id": "mon_1", "text": "AZ-900 Cloud Concepts", "link": "https://learn.microsoft.com/en-us/training/modules/principles-cloud-computing/"},
+        {"id": "mon_2", "text": "Azure Portal exploration", "link": "https://portal.azure.com"},
+        {"id": "mon_3", "text": "Write summary", "link": ""}
     ],
     "Tuesday": [
-        ("learn", "AZ-900 Cloud Benefits", "https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/"),
-        ("video", "Azure fundamentals video", "https://www.youtube.com/results?search_query=az-900+john+savill"),
-        ("practice", "Quiz + notes", "")
+        {"id": "tue_1", "text": "AZ-900 Cloud Benefits", "link": "https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/"},
+        {"id": "tue_2", "text": "Azure fundamentals video", "link": "https://www.youtube.com/results?search_query=az-900"},
+        {"id": "tue_3", "text": "Quiz + notes", "link": ""}
     ],
     "Wednesday": [
-        ("learn", "Python basics", "https://www.w3schools.com/python/"),
-        ("code", "Write automation script", ""),
-        ("practice", "Loops + functions", "")
+        {"id": "wed_1", "text": "Python basics", "link": "https://www.w3schools.com/python/"},
+        {"id": "wed_2", "text": "Automation script", "link": ""},
+        {"id": "wed_3", "text": "Loops + functions drills", "link": ""}
     ],
     "Thursday": [
-        ("learn", "Git basics", "https://www.atlassian.com/git/tutorials"),
-        ("practice", "Push to GitHub", "https://github.com"),
-        ("project", "Portfolio repo init", "")
+        {"id": "thu_1", "text": "Git basics", "link": "https://www.atlassian.com/git/tutorials"},
+        {"id": "thu_2", "text": "Push to GitHub", "link": "https://github.com"},
+        {"id": "thu_3", "text": "Portfolio repo init", "link": ""}
     ],
     "Friday": [
-        ("learn", "Docker intro", "https://docs.docker.com/get-started/"),
-        ("practice", "Build container", ""),
-        ("lab", "Run environment", "")
+        {"id": "fri_1", "text": "Docker intro", "link": "https://docs.docker.com/get-started/"},
+        {"id": "fri_2", "text": "Build container", "link": ""},
+        {"id": "fri_3", "text": "Run environment", "link": ""}
     ],
     "Saturday": [
-        ("project", "Mini project build", ""),
-        ("review", "Fix gaps", ""),
-        ("notes", "Document learnings", "")
+        {"id": "sat_1", "text": "Mini project build", "link": ""},
+        {"id": "sat_2", "text": "Fix gaps", "link": ""},
+        {"id": "sat_3", "text": "Document learnings", "link": ""}
     ],
     "Sunday": [
-        ("review", "Weekly review", ""),
-        ("plan", "Plan next week", ""),
-        ("rest", "Light study / rest", "")
+        {"id": "sun_1", "text": "Weekly review", "link": ""},
+        {"id": "sun_2", "text": "Plan next week", "link": ""},
+        {"id": "sun_3", "text": "Rest / light study", "link": ""}
     ]
 }
 
-# ---------------- CHECKLIST ----------------
+# ---------------- TASK RENDER ----------------
 def render_day(day, tasks):
     st.markdown(f"## 📅 {day}")
 
-    for key, text, link in tasks:
-        k = f"{day}_{key}"
+    for task in tasks:
+        task_id = task["id"]
+        text = task["text"]
+        link = task["link"]
 
-        if k not in st.session_state.progress:
-            st.session_state.progress[k] = False
+        if task_id not in st.session_state.progress:
+            st.session_state.progress[task_id] = False
 
         col1, col2 = st.columns([0.85, 0.15])
 
         with col1:
-            val = st.checkbox(text, value=st.session_state.progress[k], key=k)
-            st.session_state.progress[k] = val
+            val = st.checkbox(text, value=st.session_state.progress[task_id], key=task_id)
+            st.session_state.progress[task_id] = val
 
         with col2:
             if link:
@@ -104,26 +106,19 @@ def render_day(day, tasks):
 
     save_progress()
 
-# ---------------- NEXT TASK ----------------
-def next_task():
-    for k, v in st.session_state.progress.items():
-        if not v:
-            return k
-    return None
-
 # ---------------- PROGRESS ----------------
 def progress():
     total = len(st.session_state.progress)
     done = sum(1 for v in st.session_state.progress.values() if v)
     return done / total if total else 0
 
-# ---------------- UI (NO DROPDOWNS, NO NAVIGATION) ----------------
-st.title("🚀 Weekly IT Career Planner")
-st.caption("Focus mode: one system, one plan, no distractions.")
+# ---------------- UI ----------------
+st.title("🚀 Weekly IT Career Planner – Fixed Architecture")
+st.caption("No duplicate keys, stable state system, production-safe design.")
 
-# TODAY (always visible)
-today_name = date.today().strftime("%A")
+# TODAY
 st.markdown("---")
+today_name = date.today().strftime("%A")
 st.subheader(f"📍 Today: {today_name}")
 
 if today_name in WEEK_PLAN:
@@ -131,23 +126,22 @@ if today_name in WEEK_PLAN:
 else:
     st.info("No plan for today")
 
+# WEEK
 st.markdown("---")
-
-# FULL WEEK (always visible, no collapse)
 st.subheader("📆 This Week")
 
 for day, tasks in WEEK_PLAN.items():
     render_day(day, tasks)
     st.markdown("---")
 
-# PROGRESS (always visible)
+# PROGRESS
 st.subheader("📊 Progress")
 p = progress()
 st.progress(p)
 st.write(f"{round(p*100)}% complete")
 
-# RESET (bottom only)
+# RESET
 st.markdown("---")
 st.button("🔄 Reset Progress")
 
-st.sidebar.info("No dropdowns. Full focus weekly system 🧠")
+st.sidebar.info("Architecture fixed: stable IDs, no duplicate Streamlit keys 🚀")
