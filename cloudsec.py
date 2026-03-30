@@ -2,18 +2,18 @@ import streamlit as st
 import json
 import os
 
-st.set_page_config(page_title="IT Study Planner", layout="wide")
+st.set_page_config(page_title="IT Study Planner ELITE", layout="wide")
 
 DATA_FILE = "progress.json"
-PASSWORD = "changeme"  # change this
+PASSWORD = "changeme"
 
-# --------- AUTH ---------
+# ---------------- AUTH ----------------
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
     st.title("🔐 Login")
-    pwd = st.text_input("Enter password", type="password")
+    pwd = st.text_input("Password", type="password")
     if st.button("Login"):
         if pwd == PASSWORD:
             st.session_state.authenticated = True
@@ -22,7 +22,7 @@ if not st.session_state.authenticated:
             st.error("Wrong password")
     st.stop()
 
-# --------- LOAD / SAVE ---------
+# ---------------- STORAGE ----------------
 def load_progress():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
@@ -33,105 +33,102 @@ def save_progress():
     with open(DATA_FILE, "w") as f:
         json.dump(st.session_state.progress, f)
 
-# --------- STATE INIT ---------
 if "progress" not in st.session_state:
     st.session_state.progress = load_progress()
 
-# --------- RESET ---------
-def reset_progress():
+# ---------------- RESET ----------------
+if st.sidebar.button("🔄 Reset Progress"):
     st.session_state.progress = {}
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
 
-st.sidebar.markdown("---")
-if st.sidebar.button("🔄 Reset all progress"):
-    reset_progress()
-    st.sidebar.success("Progress reset!")
-
-# --------- CHECKLIST ---------
-def checklist(section, items):
-    st.subheader(section)
-    for key, label, link in items:
-        full_key = f"{section}_{key}"
-        if full_key not in st.session_state.progress:
-            st.session_state.progress[full_key] = False
+# ---------------- CHECKLIST ----------------
+def checklist(day, tasks):
+    st.subheader(day)
+    for key, text, link in tasks:
+        k = f"{day}_{key}"
+        if k not in st.session_state.progress:
+            st.session_state.progress[k] = False
         col1, col2 = st.columns([0.7, 0.3])
         with col1:
-            new_val = st.checkbox(label, value=st.session_state.progress[full_key])
-            st.session_state.progress[full_key] = new_val
+            val = st.checkbox(text, value=st.session_state.progress[k])
+            st.session_state.progress[k] = val
         with col2:
             if link:
                 st.markdown(f"[Open]({link})")
     save_progress()
 
-# --------- NEXT TASK ---------
+# ---------------- NEXT TASK ----------------
 def next_task():
-    for key, done in st.session_state.progress.items():
-        if not done:
-            return key
+    for k, v in st.session_state.progress.items():
+        if not v:
+            return k
     return None
 
-# --------- PROGRESS ---------
-def calc_progress():
+# ---------------- PROGRESS ----------------
+def progress():
     total = len(st.session_state.progress)
     done = sum(1 for v in st.session_state.progress.values() if v)
-    return (done / total) if total > 0 else 0
+    return done / total if total else 0
 
-st.title("🚀 IT Career Study Planner")
+# ---------------- UI ----------------
+st.title("🚀 IT Career Planner – ELITE 60 DAYS")
 
-view = st.sidebar.selectbox(
-    "Choose view",
-    ["Next Task", "Daily", "Weekly", "Progress"]
-)
+view = st.sidebar.selectbox("View", ["Next Task", "Daily", "Progress"])
 
-# ---------------- NEXT TASK ----------------
+# ---------------- NEXT ----------------
 if view == "Next Task":
-    st.header("🎯 Next Task")
     task = next_task()
-    if task:
-        st.success(f"Your next task: {task}")
-    else:
-        st.success("All tasks completed! 🚀")
+    st.success(task if task else "All done 🚀")
 
 # ---------------- DAILY ----------------
 elif view == "Daily":
-    st.header("📅 Daily Plan")
-    day = st.selectbox("Select Day", ["Day 1", "Day 2", "Day 3"])
+    day = st.selectbox("Day", list(range(1, 61)))
 
-    if day == "Day 1":
-        checklist("Day 1 - Azure Intro", [
-            ("d1_1", "Create Azure account", "https://portal.azure.com"),
-            ("d1_2", "Watch AZ-900 intro", "https://www.youtube.com/results?search_query=az-900+john+savill"),
-            ("d1_3", "Read Cloud Concepts", "https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/"),
+    # -------- AZURE AZ-900 (Day 1–14) --------
+    if day <= 14:
+        checklist(f"Day {day} - AZ-900", [
+            ("1", "Microsoft Learn AZ-900 module", "https://learn.microsoft.com/en-us/training/paths/azure-fundamentals/"),
+            ("2", "Watch John Savill AZ-900", "https://www.youtube.com/results?search_query=az-900+john+savill"),
+            ("3", "Use Azure Portal", "https://portal.azure.com"),
+            ("4", "Take notes + summarize", ""),
+            ("5", "Repeat + lab", "https://portal.azure.com"),
         ])
 
-    elif day == "Day 2":
-        checklist("Day 2 - Compute", [
-            ("d2_1", "Learn VMs", "https://learn.microsoft.com"),
-            ("d2_2", "Create VM", "https://portal.azure.com"),
-            ("d2_3", "Connect to VM", ""),
+    # -------- PYTHON (15–28) --------
+    elif day <= 28:
+        checklist(f"Day {day} - Python", [
+            ("1", "Automate the Boring Stuff", "https://automatetheboringstuff.com/"),
+            ("2", "W3Schools Python practice", "https://www.w3schools.com/python/"),
+            ("3", "Build script (logs/API)", ""),
+            ("4", "Improve script", ""),
+            ("5", "Push to GitHub", "https://github.com"),
         ])
 
-    elif day == "Day 3":
-        checklist("Day 3 - Storage", [
-            ("d3_1", "Learn Storage", "https://learn.microsoft.com"),
-            ("d3_2", "Upload file", "https://portal.azure.com"),
+    # -------- DOCKER/GIT (29–42) --------
+    elif day <= 42:
+        checklist(f"Day {day} - DevOps", [
+            ("1", "Docker course", "https://www.udemy.com/course/docker-kubernetes-the-practical-guide/"),
+            ("2", "Git crash course", "https://www.youtube.com/results?search_query=git+github+crash+course"),
+            ("3", "Build container", ""),
+            ("4", "Push repo", "https://github.com"),
+            ("5", "Deploy locally", ""),
         ])
 
-# ---------------- WEEKLY ----------------
-elif view == "Weekly":
-    st.header("🗓 Weekly Plan")
-
-    checklist("Week 1", [
-        ("w1_1", "Cloud basics", "https://learn.microsoft.com"),
-        ("w1_2", "Create VM", "https://portal.azure.com"),
-    ])
+    # -------- AZ-104 (43–60) --------
+    else:
+        checklist(f"Day {day} - AZ-104", [
+            ("1", "AZ-104 Learn path", "https://learn.microsoft.com/en-us/training/paths/az-104-administrator-prerequisites/"),
+            ("2", "Azure lab work", "https://portal.azure.com"),
+            ("3", "Build full project", ""),
+            ("4", "Monitor/logging", ""),
+            ("5", "Document in GitHub", "https://github.com"),
+        ])
 
 # ---------------- PROGRESS ----------------
 elif view == "Progress":
-    st.header("📊 Progress")
-    progress = calc_progress()
-    st.progress(progress)
-    st.write(f"{round(progress*100)}% complete")
+    p = progress()
+    st.progress(p)
+    st.write(f"{round(p*100)}% complete")
 
-st.sidebar.info("Autosave + Login enabled 🔐")
+st.sidebar.info("Elite mode activated 🔥")
